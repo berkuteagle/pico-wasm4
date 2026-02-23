@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "wasm4-runtime.h"
 #include "pico/m3.h"
 #include "pico/m3/env.h"
@@ -9,6 +10,8 @@ static IM3Runtime runtime = NULL;
 static IM3Module module = NULL;
 static IM3Function start_fn = NULL;
 static IM3Function update_fn = NULL;
+
+static uint8_t disk[W4_DISK_SIZE] = {};
 
 static void w4_runtime_blit_sub(uint8_t *memory, const uint8_t *sprite, uint32_t x, uint32_t y, uint32_t width,
                                 uint32_t height, uint32_t srcX, uint32_t srcY, uint32_t stride, uint32_t flags)
@@ -95,6 +98,104 @@ static void w4_runtime_oval(uint8_t *memory, uint32_t x, uint32_t y, uint32_t wi
     uint8_t *draw_colors = memory + W4_DRAW_COLORS_OFFSET;
 
     w4_framebuffer_oval(framebuffer, draw_colors, x, y, width, height);
+}
+
+static uint32_t w4_runtime_diskr(uint8_t *disk, uint8_t *dest, uint32_t size)
+{
+    if (!disk)
+    {
+        return 0;
+    }
+
+    if (size > W4_DISK_SIZE)
+    {
+        size = W4_DISK_SIZE;
+    }
+    memcpy(dest, disk, size);
+
+    return size;
+}
+
+static uint32_t w4_runtime_diskw(uint8_t *disk, const uint8_t *src, uint32_t size)
+{
+    if (!disk)
+    {
+        return 0;
+    }
+
+    if (size > W4_DISK_SIZE)
+    {
+        size = W4_DISK_SIZE;
+    }
+    memcpy(disk, src, size);
+
+    return size;
+}
+
+static void w4_runtime_trace(const uint8_t *str)
+{
+    puts((const char *)str);
+}
+
+static void w4_runtime_trace_utf8(const uint8_t *str, uint32_t byteLength)
+{
+    printf("%.*s\n", byteLength, str);
+}
+
+static void w4_runtime_trace_utf16(const uint16_t *str, uint32_t byteLength)
+{
+    printf("TODO: traceUtf16: %p, %d\n", str, byteLength);
+}
+
+static void w4_runtime_tracef(uint8_t *memory, const uint8_t *str, const void *stack)
+{
+    const uint8_t *argPtr = stack;
+    uint32_t strPtr;
+
+    for (; *str != 0; ++str)
+    {
+        if (*str == '%')
+        {
+            const uint8_t sym = *(++str);
+            switch (sym)
+            {
+            case 0:
+                return; // Interrupted
+            case '%':
+                putc('%', stdout);
+                break;
+            case 'c':
+                putc(*(uint32_t *)(argPtr), stdout);
+                argPtr += 4;
+                break;
+            case 'd':
+                printf("%" PRId32, (uint32_t *)(argPtr));
+                argPtr += sizeof(uint32_t);
+                break;
+            case 'x':
+                printf("%" PRIx32, (uint32_t *)(argPtr));
+                argPtr += sizeof(uint32_t);
+                break;
+            case 's':
+                strPtr = *(uint32_t *)(argPtr);
+                argPtr += sizeof(uint32_t);
+                const char *strPtr_host = (const char *)memory + strPtr;
+                printf("%s", strPtr_host);
+                break;
+            case 'f':
+                printf("%lg", (uint64_t *)(argPtr));
+                argPtr += sizeof(uint64_t);
+                break;
+            default:
+                printf("%%%c", sym);
+            }
+        }
+        else
+        {
+            putc(*str, stdout);
+        }
+    }
+    putc('\n', stdout);
 }
 
 static m3ApiRawFunction(blit)
@@ -235,31 +336,27 @@ static m3ApiRawFunction(tone)
 
 static m3ApiRawFunction(diskr)
 {
-    m3ApiReturnType(int);
+    m3ApiReturnType(uint32_t);
     m3ApiGetArgMem(uint8_t *, dest);
-    m3ApiGetArg(int, size);
+    m3ApiGetArg(uint32_t, size);
 
-    // m3ApiReturn(w4_runtimeDiskr(dest, size));
-
-    m3ApiReturn(size);
+    m3ApiReturn(w4_runtime_diskr((uint8_t *)runtime->userdata, dest, size));
 }
 
 static m3ApiRawFunction(diskw)
 {
-    m3ApiReturnType(int);
+    m3ApiReturnType(uint32_t);
     m3ApiGetArgMem(const uint8_t *, src);
-    m3ApiGetArg(int, size);
+    m3ApiGetArg(uint32_t, size);
 
-    // m3ApiReturn(w4_runtimeDiskw(src, size));
-
-    m3ApiReturn(size);
+    m3ApiReturn(w4_runtime_diskw((uint8_t *)runtime->userdata, src, size));
 }
 
 static m3ApiRawFunction(trace)
 {
-    m3ApiGetArgMem(const char *, str);
+    m3ApiGetArgMem(const uint8_t *, str);
 
-    // w4_runtimeTrace((const uint8_t *)str);
+    w4_runtime_trace(str);
 
     m3ApiSuccess();
 }
@@ -267,9 +364,9 @@ static m3ApiRawFunction(trace)
 static m3ApiRawFunction(traceUtf8)
 {
     m3ApiGetArgMem(const uint8_t *, str);
-    m3ApiGetArg(int, byteLength);
+    m3ApiGetArg(uint32_t, byteLength);
 
-    // w4_runtimeTraceUtf8(str, byteLength);
+    w4_runtime_trace_utf8(str, byteLength);
 
     m3ApiSuccess();
 }
@@ -277,9 +374,9 @@ static m3ApiRawFunction(traceUtf8)
 static m3ApiRawFunction(traceUtf16)
 {
     m3ApiGetArgMem(const uint16_t *, str);
-    m3ApiGetArg(int, byteLength);
+    m3ApiGetArg(uint32_t, byteLength);
 
-    // w4_runtimeTraceUtf16(str, byteLength);
+    w4_runtime_trace_utf16(str, byteLength);
 
     m3ApiSuccess();
 }
@@ -289,7 +386,7 @@ static m3ApiRawFunction(tracef)
     m3ApiGetArgMem(const char *, str);
     m3ApiGetArgMem(const void *, stack);
 
-    // w4_runtimeTracef((const uint8_t *)str, stack);
+    w4_runtime_tracef((uint8_t *)m3ApiOffsetToPtr(0), str, stack);
 
     m3ApiSuccess();
 }
@@ -319,8 +416,10 @@ static void w4_link_api(IM3Module module)
 
 uint8_t *w4_runtime_init()
 {
+    memset(disk, 0, W4_DISK_SIZE);
+
     env = m3_NewEnvironment();
-    runtime = m3_NewRuntime(env, M3_RUNTIME_STACK_SIZE, NULL);
+    runtime = m3_NewRuntime(env, M3_RUNTIME_STACK_SIZE, disk);
 
     runtime->memory.maxPages = 1;
     runtime->memory.pageSize = d_m3DefaultMemPageSize;

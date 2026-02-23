@@ -13,4 +13,4 @@
 
 #define W4_FB_SIZE (W4_FB_W * W4_FB_H / 4)
 
-#define W4_STORAGE_SLOT_SIZE 1024
+#define W4_DISK_SIZE 1024
