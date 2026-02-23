@@ -41,7 +41,10 @@ add_executable(pico-wasm4
     src/wasm4-runtime.c
     src/wasm4-display.c
     src/wasm4-framebuffer.c
-    src/wasm4-gamepad.c
+)
+
+target_compile_definitions(pico-wasm4 PRIVATE
+    PICO_STACK_SIZE=0x1000
 )
 
 add_subdirectory(lib/pico-m3)
@@ -50,21 +53,27 @@ add_subdirectory(lib/pico-tm1638)
 
 target_compile_definitions(pico_m3 INTERFACE
     d_m3FixedHeap=204800
+    d_m3SkipMemoryBoundsCheck=1
+    d_m3SkipStackCheck=0
+    d_m3VerboseErrorMessages=0
 )
 
 pico_set_program_name(pico-wasm4 "pico-wasm4")
 pico_set_program_version(pico-wasm4 "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(pico-wasm4 TRUE)
+pico_enable_stdio_uart(pico-wasm4 FALSE)
 pico_enable_stdio_usb(pico-wasm4 FALSE)
 
 # Add the standard library to the build
 target_link_libraries(pico-wasm4
     pico_stdlib
+    pico_multicore
+    pico_time
     pico_m3
     pico_st7789
     pico_tm1638
+    hardware_timer
 )
 
 # Add the standard include files to the build

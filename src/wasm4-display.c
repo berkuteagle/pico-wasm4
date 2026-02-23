@@ -23,23 +23,18 @@ void w4_display_clear()
     st7789_fill(SCREEN_BG);
 }
 
-void w4_display_update(const uint8_t *memory)
+void w4_display_update(const uint8_t *framebuffer, const uint8_t *palette)
 {
-    const uint8_t *framebuffer = memory + W4_FRAMEBUFFER_OFFSET;
-    const uint32_t *palette = (const uint32_t *)(memory + W4_PALETTE_OFFSET);
-
     st7789_set_window(OFFSET_X, OFFSET_Y, OFFSET_X + W4_FB_W - 1,
                       OFFSET_Y + W4_FB_H - 1);
 
     st7789_dc_data();
 
-    const uint8_t *pal = (uint8_t *)(palette);
-
     // Convert palette from rgb888 to rgb565
     for (int i = 0; i < 4; i++)
     {
         palette_rgb565[i] =
-            rgb888_to_565(pal[i * 4 + 2], pal[i * 4 + 1], pal[i * 4]);
+            rgb888_to_565(palette[i * 4 + 2], palette[i * 4 + 1], palette[i * 4]);
     }
 
     for (int line_number = 0; line_number < W4_FB_H; line_number++)

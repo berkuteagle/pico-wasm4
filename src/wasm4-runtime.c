@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "wasm4-runtime.h"
 #include "pico/m3.h"
 #include "pico/m3/env.h"
@@ -414,7 +415,7 @@ static void w4_link_api(IM3Module module)
     m3_LinkRawFunction(module, mName, "tracef", "v(ii)", tracef);
 }
 
-uint8_t *w4_runtime_init()
+void w4_runtime_init()
 {
     memset(disk, 0, W4_DISK_SIZE);
 
@@ -438,8 +439,6 @@ uint8_t *w4_runtime_init()
 
     uint16_t *colors = (uint16_t *)(memory + W4_DRAW_COLORS_OFFSET);
     colors[0] = 0x0312;
-
-    return memory;
 }
 
 void w4_runtime_load_wasm(const uint8_t *const wasm_data, uint32_t wasm_data_size)
@@ -459,8 +458,12 @@ void w4_runtime_load_wasm(const uint8_t *const wasm_data, uint32_t wasm_data_siz
     res = m3_FindFunction(&start_fn, runtime, "start");
 }
 
-void w4_runtime_update(uint8_t *memory)
+void w4_runtime_update(uint8_t *framebuffer, uint8_t *palette, uint8_t *gamepad)
 {
+    uint8_t *memory = m3_GetMemory(runtime, NULL, 0);
+
+    *(memory + W4_GAMEPADS_OFFSET) = *gamepad;
+
     if (start_fn)
     {
         m3_CallV(start_fn);
@@ -476,4 +479,7 @@ void w4_runtime_update(uint8_t *memory)
     {
         m3_CallV(update_fn);
     }
+
+    memcpy(framebuffer, memory + W4_FRAMEBUFFER_OFFSET, W4_FB_SIZE);
+    memcpy(palette, memory + W4_PALETTE_OFFSET, W4_PALETTE_SIZE);
 }

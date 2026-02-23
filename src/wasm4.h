@@ -12,5 +12,6 @@
 #define W4_FB_H 160
 
 #define W4_FB_SIZE (W4_FB_W * W4_FB_H / 4)
+#define W4_PALETTE_SIZE 16
 
 #define W4_DISK_SIZE 1024

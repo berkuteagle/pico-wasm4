@@ -12,4 +12,4 @@
 
 void w4_display_init(void);
 void w4_display_clear(void);
-void w4_display_update(const uint8_t *memory);
+void w4_display_update(const uint8_t *framebuffer, const uint8_t *palette);
