@@ -41,10 +41,12 @@ add_executable(pico-wasm4
     src/wasm4-runtime.c
     src/wasm4-display.c
     src/wasm4-framebuffer.c
+    src/wasm4-gamepad.c
 )
 
 add_subdirectory(lib/pico-m3)
 add_subdirectory(lib/pico-st7789)
+add_subdirectory(lib/pico-tm1638)
 
 target_compile_definitions(pico_m3 INTERFACE
     d_m3FixedHeap=204800
@@ -62,6 +64,7 @@ target_link_libraries(pico-wasm4
     pico_stdlib
     pico_m3
     pico_st7789
+    pico_tm1638
 )
 
 # Add the standard include files to the build
