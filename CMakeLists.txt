@@ -68,6 +68,7 @@ pico_enable_stdio_usb(pico-wasm4 FALSE)
 # Add the standard library to the build
 target_link_libraries(pico-wasm4
     pico_stdlib
+    pico_stdio
     pico_multicore
     pico_time
     pico_m3

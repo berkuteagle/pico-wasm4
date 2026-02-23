@@ -36,6 +36,9 @@ void core1_entry()
 
     while (true)
     {
+        while (frame_ready)
+            tight_loop_contents();
+
         next_frame = delayed_by_us(next_frame, 16666);
 
         w4_runtime_update(framebuffer, palette, &gamepad);

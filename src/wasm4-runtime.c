@@ -325,10 +325,10 @@ static m3ApiRawFunction(textUtf16)
 
 static m3ApiRawFunction(tone)
 {
-    m3ApiGetArg(int, frequency);
-    m3ApiGetArg(int, duration);
-    m3ApiGetArg(int, volume);
-    m3ApiGetArg(int, flags);
+    m3ApiGetArg(uint32_t, frequency);
+    m3ApiGetArg(uint32_t, duration);
+    m3ApiGetArg(uint32_t, volume);
+    m3ApiGetArg(uint32_t, flags);
 
     // w4_runtimeTone(frequency, duration, volume, flags);
 
