@@ -8,10 +8,10 @@
 #include <stdarg.h>
 #include <limits.h>
 
-#include "m3_env.h"
-#include "m3_compile.h"
-#include "m3_exception.h"
-#include "m3_info.h"
+#include "pico/m3/env.h"
+#include "pico/m3/compile.h"
+#include "pico/m3/exception.h"
+#include "pico/m3/info.h"
 
 
 IM3Environment  m3_NewEnvironment  ()

@@ -5,9 +5,9 @@
 //  Copyright © 2019 Steven Massey. All rights reserved.
 //
 
-#include "m3_env.h"
-#include "m3_info.h"
-#include "m3_compile.h"
+#include "pico/m3/env.h"
+#include "pico/m3/info.h"
+#include "pico/m3/compile.h"
 
 #if defined(DEBUG) || (d_m3EnableStrace >= 2)
 

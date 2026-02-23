@@ -5,9 +5,9 @@
 //  Copyright © 2019 Steven Massey. All rights reserved.
 //
 
-#include "m3_env.h"
-#include "m3_exception.h"
-#include "m3_info.h"
+#include "pico/m3/env.h"
+#include "pico/m3/exception.h"
+#include "pico/m3/info.h"
 
 
 u8  ConvertTypeCharToTypeId (char i_code)

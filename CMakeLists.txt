@@ -24,6 +24,7 @@ if(EXISTS ${picoVscode})
 endif()
 # ====================================================================================
 set(PICO_BOARD weact_studio_rp2040_16mb CACHE STRING "Board type")
+set(PICO_DEOPTIMIZED_DEBUG 1)
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -36,29 +37,42 @@ pico_sdk_init()
 # Add executable. Default name is the project name, version 0.1
 
 add_executable(pico-wasm4
-    src/pico-wasm4.c
+    src/main.c
+    src/wasm4-runtime.c
+    src/wasm4-display.c
+    src/wasm4-framebuffer.c
+)
+
+add_subdirectory(lib/pico-m3)
+add_subdirectory(lib/pico-st7789)
+
+target_compile_definitions(pico_m3 INTERFACE
+    d_m3FixedHeap=204800
 )
 
 pico_set_program_name(pico-wasm4 "pico-wasm4")
 pico_set_program_version(pico-wasm4 "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(pico-wasm4 1)
-pico_enable_stdio_usb(pico-wasm4 0)
+pico_enable_stdio_uart(pico-wasm4 TRUE)
+pico_enable_stdio_usb(pico-wasm4 FALSE)
 
 # Add the standard library to the build
 target_link_libraries(pico-wasm4
-    pico_stdlib)
+    pico_stdlib
+    pico_m3
+    pico_st7789
+)
 
 # Add the standard include files to the build
 target_include_directories(pico-wasm4 PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
 # Add any user requested libraries
-target_link_libraries(pico-wasm4
-    hardware_spi
-)
+# target_link_libraries(pico-wasm4
+#     hardware_spi
+# )
 
 pico_add_extra_outputs(pico-wasm4)
 

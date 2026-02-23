@@ -5,8 +5,8 @@
 //  Copyright © 2019 Steven Massey. All rights reserved.
 //
 
-#include "m3_env.h"
-#include "m3_exception.h"
+#include "pico/m3/env.h"
+#include "pico/m3/exception.h"
 
 
 void Module_FreeFunctions (IM3Module i_module)

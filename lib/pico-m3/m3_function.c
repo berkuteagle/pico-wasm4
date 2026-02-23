@@ -5,8 +5,8 @@
 //  Copyright © 2021 Steven Massey. All rights reserved.
 //
 
-#include "m3_function.h"
-#include "m3_env.h"
+#include "pico/m3/function.h"
+#include "pico/m3/env.h"
 
 
 M3Result AllocFuncType (IM3FuncType * o_functionType, u32 i_numTypes)
