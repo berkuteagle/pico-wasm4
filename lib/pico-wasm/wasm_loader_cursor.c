@@ -5,9 +5,28 @@
 inline wasm_loader_cursor_t
 wasm_loader_cursor_create(const uint8_t *wasm, const uint16_t wasm_size) {
   return (wasm_loader_cursor_t){
-      .current = wasm,
+      .current = wasm + MAGIC_LENGTH,
       .end = wasm + wasm_size,
   };
+}
+
+inline const uint8_t *
+wasm_loader_cursor_get_current(wasm_loader_cursor_t *cursor) {
+  return cursor->current;
+}
+
+inline void wasm_loader_cursor_set_current(wasm_loader_cursor_t *cursor,
+                                           const uint8_t *current) {
+  cursor->current = current;
+}
+
+inline const uint8_t *wasm_loader_cursor_forward(wasm_loader_cursor_t *cursor,
+                                                 uint32_t n) {
+  return cursor->current + n;
+}
+
+inline void wasm_loader_cursor_jump(wasm_loader_cursor_t *cursor, uint32_t n) {
+  cursor->current += n;
 }
 
 inline bool wasm_loader_cursor_has_next(wasm_loader_cursor_t *cursor) {
@@ -34,4 +53,13 @@ uint32_t wasm_loader_cursor_next_leb128(wasm_loader_cursor_t *cursor) {
   }
 
   return result;
+}
+
+const char *wasm_loader_cursor_next_str(wasm_loader_cursor_t *cursor) {
+  uint32_t len = wasm_loader_cursor_next_leb128(cursor);
+  const char *ptr = (const char *)cursor->current;
+
+  wasm_loader_cursor_jump(cursor, len);
+
+  return ptr;
 }

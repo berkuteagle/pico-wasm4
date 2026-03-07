@@ -13,6 +13,7 @@ target_sources(pico_wasm INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/wasm_loader_cursor.c
     ${CMAKE_CURRENT_LIST_DIR}/wasm_loader_parser.c
     ${CMAKE_CURRENT_LIST_DIR}/wasm_locals.c
+    ${CMAKE_CURRENT_LIST_DIR}/wasm_module.c
     ${CMAKE_CURRENT_LIST_DIR}/wasm_utils.c
     ${CMAKE_CURRENT_LIST_DIR}/wasm_v_stack.c
 )

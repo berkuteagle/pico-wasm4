@@ -2,31 +2,27 @@
 
 #include "pico/wasm/c_stack.h"
 #include "pico/wasm/func.h"
+#include "pico/wasm/host.h"
 #include "pico/wasm/locals.h"
+#include "pico/wasm/module.h"
 #include "pico/wasm/v_stack.h"
 #include <stdint.h>
 
 typedef struct {
+  const wasm_host_t *host;
   const uint8_t *pc;
 
   wasm_v_stack_t v_stack;
   wasm_c_stack_t c_stack;
   wasm_locals_t locals;
-
-  // wasm_module_t module;
-  // control_frame_t control_stack[32];
-  // int csp;
+  wasm_module_t *module;
 } wasm_vm_t;
 
+wasm_vm_t *wasm_vm_new(wasm_module_t *module, wasm_host_t *host);
 void wasm_vm_func_call(wasm_vm_t *vm, wasm_func_t *func);
 void wasm_vm_func_return(wasm_vm_t *vm);
 
 typedef int32_t (*host_func_t)(void *vm);
-
-typedef struct {
-  uint16_t param_count;
-  uint16_t result_count;
-} wasm_type_t;
 
 typedef struct {
   uint8_t kind; // 0=wasm, 1=host
@@ -50,23 +46,11 @@ typedef enum {
 } wasm_import_kind_t;
 
 typedef struct {
-  const char *module;
-  const char *name;
-
-  uint16_t type_index;
-} wasm_import_func_t;
-
-typedef struct {
   const char *name;
   uint8_t kind;
 
   uint16_t index;
 } wasm_export_t;
-
-typedef struct {
-  uint32_t entries[256];
-  uint16_t size;
-} wasm_table_t;
 
 typedef struct {
 
@@ -92,12 +76,7 @@ typedef struct {
 
   uint8_t *memory;
   uint32_t memory_size;
-} wasm_module_t;
-
-typedef struct {
-  const char *ptr;
-  uint32_t len;
-} wasm_str_t;
+} wasm_module_old_t;
 
 typedef struct {
   const char *name;
