@@ -50,6 +50,7 @@ target_compile_definitions(pico-wasm4 PRIVATE
 add_subdirectory(lib/pico-m3)
 add_subdirectory(lib/pico-st7789)
 add_subdirectory(lib/pico-tm1638)
+# add_subdirectory(lib/pico-wasm)
 
 target_compile_definitions(pico_m3 INTERFACE
     d_m3FixedHeap=204800
@@ -74,6 +75,7 @@ target_link_libraries(pico-wasm4
     pico_m3
     pico_st7789
     pico_tm1638
+    # pico_wasm
     hardware_timer
 )
 
@@ -88,4 +90,3 @@ target_include_directories(pico-wasm4 PRIVATE
 # )
 
 pico_add_extra_outputs(pico-wasm4)
-
