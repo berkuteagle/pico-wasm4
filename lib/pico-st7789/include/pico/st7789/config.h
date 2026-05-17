@@ -17,21 +17,21 @@
 #endif
 
 #ifndef ST7789_PIN_DC
-#define ST7789_PIN_DC 16
+#define ST7789_PIN_DC 7
 #endif
 
 #ifndef ST7789_SPI_PIN_SCK
-#define ST7789_SPI_PIN_SCK 18
+#define ST7789_SPI_PIN_SCK 2
 #endif
 
 #ifndef ST7789_SPI_PIN_MOSI
-#define ST7789_SPI_PIN_MOSI 19
+#define ST7789_SPI_PIN_MOSI 3
 #endif
 
 #ifndef ST7789_PIN_RST
-#define ST7789_PIN_RST 20
+#define ST7789_PIN_RST 6
 #endif
 
 #ifndef ST7789_PIN_BLK
-#define ST7789_PIN_BLK 21
+#define ST7789_PIN_BLK 8
 #endif

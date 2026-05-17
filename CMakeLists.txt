@@ -16,14 +16,14 @@ else()
     set(USERHOME $ENV{HOME})
 endif()
 set(sdkVersion 2.2.0)
-set(toolchainVersion 14_2_Rel1)
+set(toolchainVersion 15_2_Rel1)
 set(picotoolVersion 2.2.0-a4)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if(EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD weact_studio_rp2040_16mb CACHE STRING "Board type")
+set(PICO_BOARD pico2 CACHE STRING "Board type")
 set(PICO_DEOPTIMIZED_DEBUG 1)
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
@@ -49,8 +49,8 @@ target_compile_definitions(pico-wasm4 PRIVATE
 
 add_subdirectory(lib/pico-m3)
 add_subdirectory(lib/pico-st7789)
-add_subdirectory(lib/pico-tm1638)
 add_subdirectory(lib/pico-wasm)
+add_subdirectory(lib/pico-buttons)
 
 target_compile_definitions(pico_m3 INTERFACE
     d_m3FixedHeap=204800
@@ -63,8 +63,9 @@ pico_set_program_name(pico-wasm4 "pico-wasm4")
 pico_set_program_version(pico-wasm4 "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(pico-wasm4 FALSE)
+pico_enable_stdio_uart(pico-wasm4 TRUE)
 pico_enable_stdio_usb(pico-wasm4 FALSE)
+pico_enable_stdio_rtt(pico-wasm4 FALSE)
 
 # Add the standard library to the build
 target_link_libraries(pico-wasm4
@@ -74,8 +75,8 @@ target_link_libraries(pico-wasm4
     pico_time
     pico_m3
     pico_st7789
-    pico_tm1638
     pico_wasm
+    pico_buttons
     hardware_timer
 )
 

@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
-#include "pico/tm1638.h"
+#include "pico/buttons.h"
 #include "pico/time.h"
 #include "hardware/timer.h"
 #include "pico/m3/env.h"
@@ -53,11 +53,11 @@ int main()
     stdio_init_all();
 
     w4_display_init();
-    tm1638_init();
+    buttons_init();
 
     multicore_launch_core1(core1_entry);
 
-    gamepad = tm1638_read_buttons();
+    gamepad = buttons_read();
 
     add_repeating_timer_ms(-50, gamepad_timer_callback, NULL, &gamepad_timer);
 
@@ -66,7 +66,7 @@ int main()
         if (gamepad_ready)
         {
             gamepad_ready = false;
-            gamepad = tm1638_read_buttons();
+            gamepad = buttons_read();
         }
 
         if (frame_ready)
