@@ -8,9 +8,9 @@ target_link_libraries(pico_st7789_headers INTERFACE hardware_spi_headers hardwar
 
 pico_add_impl_library(pico_st7789)
 target_sources(pico_st7789 INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/st7789.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/st7789.c
 )
 target_include_directories(pico_st7789 PRIVATE INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/src
 )
 target_link_libraries(pico_st7789 INTERFACE hardware_spi hardware_gpio)

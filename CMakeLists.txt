@@ -49,8 +49,8 @@ target_compile_definitions(pico-wasm4 PRIVATE
 
 add_subdirectory(lib/pico-m3)
 add_subdirectory(lib/pico-st7789)
-add_subdirectory(lib/pico-wasm)
 add_subdirectory(lib/pico-buttons)
+add_subdirectory(lib/pico-w25qxx)
 
 target_compile_definitions(pico_m3 INTERFACE
     d_m3FixedHeap=204800
@@ -75,8 +75,8 @@ target_link_libraries(pico-wasm4
     pico_time
     pico_m3
     pico_st7789
-    pico_wasm
     pico_buttons
+    pico_w25qxx
     hardware_timer
 )
 

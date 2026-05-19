@@ -8,9 +8,9 @@ target_link_libraries(pico_tm1638_headers INTERFACE hardware_timer_headers hardw
 
 pico_add_impl_library(pico_tm1638)
 target_sources(pico_tm1638 INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/tm1638.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/tm1638.c
 )
 target_include_directories(pico_tm1638 PRIVATE INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/src
 )
 target_link_libraries(pico_tm1638 INTERFACE hardware_timer hardware_gpio)

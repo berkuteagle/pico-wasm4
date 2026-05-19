@@ -4,7 +4,7 @@
 #include "pico/time.h"
 #include "pico/st7789.h"
 #include "pico/st7789/config.h"
-#include "st7789_private.h"
+#include "st7789_cmd.h"
 
 static void st7789_reset()
 {
