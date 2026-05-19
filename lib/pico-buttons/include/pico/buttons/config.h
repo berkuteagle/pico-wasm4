@@ -1,23 +1,23 @@
 #pragma once
 
 #ifndef BUTTONS_UP_PIN
-#define BUTTONS_UP_PIN 11
+#define BUTTONS_UP_PIN 8
 #endif
 
 #ifndef BUTTONS_DOWN_PIN
-#define BUTTONS_DOWN_PIN 13
+#define BUTTONS_DOWN_PIN 7
 #endif
 
 #ifndef BUTTONS_LEFT_PIN
-#define BUTTONS_LEFT_PIN 10
+#define BUTTONS_LEFT_PIN 6
 #endif
 
 #ifndef BUTTONS_RIGHT_PIN
-#define BUTTONS_RIGHT_PIN 12
+#define BUTTONS_RIGHT_PIN 9
 #endif
 
 #ifndef BUTTONS_A_PIN
-#define BUTTONS_A_PIN 14
+#define BUTTONS_A_PIN 16
 #endif
 
 #ifndef BUTTONS_B_PIN
