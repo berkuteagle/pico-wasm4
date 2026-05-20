@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "bsp/board_api.h"
+#include "tusb.h"
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 #include "pico/buttons.h"
@@ -50,6 +52,11 @@ void core1_entry()
 
 int main()
 {
+    board_init();
+    tusb_rhport_init_t dev_init = {.role = TUSB_ROLE_DEVICE, .speed = TUSB_SPEED_AUTO};
+    tusb_init(BOARD_TUD_RHPORT, &dev_init);
+    board_init_after_tusb();
+
     stdio_init_all();
 
     w4_display_init();
@@ -74,5 +81,7 @@ int main()
             frame_ready = false;
             w4_display_update((const uint8_t *)framebuffer, (const uint8_t *)palette);
         }
+
+        tud_task();
     }
 }
