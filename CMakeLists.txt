@@ -42,10 +42,12 @@ add_executable(pico-wasm4
     src/wasm4-display.c
     src/wasm4-framebuffer.c
     src/usb_descriptors.c
+    src/usb_msc.c
 )
 
 target_compile_definitions(pico-wasm4 PRIVATE
     PICO_STACK_SIZE=0x1000
+    CONFIG_TINYUSB_MSC_ENABLED=y
 )
 
 add_subdirectory(lib/pico-m3)

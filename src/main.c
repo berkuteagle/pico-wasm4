@@ -29,6 +29,15 @@ bool gamepad_timer_callback(repeating_timer_t *t)
     return true;
 }
 
+static void usb_device_init(void) {
+  tusb_rhport_init_t dev_init = {
+    .role  = TUSB_ROLE_DEVICE,
+    .speed = TUSB_SPEED_AUTO
+  };
+  tusb_init(BOARD_TUD_RHPORT, &dev_init);
+  board_init_after_tusb();
+}
+
 void core1_entry()
 {
     w4_runtime_init();
@@ -53,12 +62,8 @@ void core1_entry()
 int main()
 {
     board_init();
-    tusb_rhport_init_t dev_init = {.role = TUSB_ROLE_DEVICE, .speed = TUSB_SPEED_AUTO};
-    tusb_init(BOARD_TUD_RHPORT, &dev_init);
-    board_init_after_tusb();
-
+    usb_device_init();
     stdio_init_all();
-
     w4_display_init();
     buttons_init();
 
@@ -84,4 +89,24 @@ int main()
 
         tud_task();
     }
+}
+
+//--------------------------------------------------------------------+
+// Device callbacks
+//--------------------------------------------------------------------+
+void tud_mount_cb(void) {
+//   blink_interval_ms = BLINK_MOUNTED;
+}
+
+void tud_umount_cb(void) {
+//   blink_interval_ms = BLINK_NOT_MOUNTED;
+}
+
+void tud_suspend_cb(bool remote_wakeup_en) {
+  (void) remote_wakeup_en;
+//   blink_interval_ms = BLINK_SUSPENDED;
+}
+
+void tud_resume_cb(void) {
+//   blink_interval_ms = tud_mounted() ? BLINK_MOUNTED : BLINK_NOT_MOUNTED;
 }

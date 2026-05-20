@@ -1,25 +1,82 @@
 #pragma once
 
-#define CFG_TUD_ENABLED (1) //enables tinyusb device mode
+//--------------------------------------------------------------------+
+// Board Specific Configuration
+//--------------------------------------------------------------------+
 
-#define CFG_TUD_CDC (1)  //tells we use the CDC class for our project
-
-// Legacy RHPORT configuration
-// Tells TinyUSB that RHPORT0 is active and should run in:
-//  - DEVICE mode (not HOST mode)
-//  - FULL SPEED (12 Mbps) USB operation.
-#define CFG_TUSB_RHPORT0_MODE   (OPT_MODE_DEVICE | OPT_MODE_FULL_SPEED)
+// RHPort number used for device can be defined by board.mk, default to port 0
 #ifndef BOARD_TUD_RHPORT
-#define BOARD_TUD_RHPORT        (0)
+#define BOARD_TUD_RHPORT 0
 #endif
-// end legacy RHPORT
 
+// RHPort max operational speed can defined by board.mk
+#ifndef BOARD_TUD_MAX_SPEED
+#define BOARD_TUD_MAX_SPEED OPT_MODE_DEFAULT_SPEED
+#endif
 
-#define CFG_TUD_CDC_RX_BUFSIZE (64)   //sets the receiving buffer size to 64 bytes
-#define CFG_TUD_CDC_TX_BUFSIZE (64)   // sets the sending buffer size to 64 bytes
-#define CFG_TUD_CDC_EP_BUFSIZE (64)   // endpoint buffer size for CDC endpoints.
+//--------------------------------------------------------------------
+// Common Configuration
+//--------------------------------------------------------------------
 
-// max packet size for endpoint 0 (control endpoint).
+// defined by compiler flags for flexibility
+#ifndef CFG_TUSB_MCU
+#error CFG_TUSB_MCU must be defined
+#endif
+
+#ifndef CFG_TUSB_OS
+#define CFG_TUSB_OS OPT_OS_NONE
+#endif
+
+#ifndef CFG_TUSB_DEBUG
+#define CFG_TUSB_DEBUG 0
+#endif
+
+// Enable Device stack
+#define CFG_TUD_ENABLED 1
+
+// Default is max speed that hardware controller could support with on-chip PHY
+#define CFG_TUD_MAX_SPEED BOARD_TUD_MAX_SPEED
+
+/* USB DMA on some MCUs can only access a specific SRAM region with restriction on alignment.
+ * Tinyusb use follows macros to declare transferring memory so that they can be put
+ * into those specific section.
+ * e.g
+ * - CFG_TUSB_MEM SECTION : __attribute__ (( section(".usb_ram") ))
+ * - CFG_TUSB_MEM_ALIGN   : __attribute__ ((aligned(4)))
+ */
+#ifndef CFG_TUSB_MEM_SECTION
+#define CFG_TUSB_MEM_SECTION
+#endif
+
+#ifndef CFG_TUSB_MEM_ALIGN
+#define CFG_TUSB_MEM_ALIGN __attribute__((aligned(4)))
+#endif
+
+//--------------------------------------------------------------------
+// DEVICE CONFIGURATION
+//--------------------------------------------------------------------
+
 #ifndef CFG_TUD_ENDPOINT0_SIZE
-#define CFG_TUD_ENDPOINT0_SIZE (64) 
-#endif 
+#define CFG_TUD_ENDPOINT0_SIZE 64
+#endif
+
+//------------- CLASS -------------//
+#define CFG_TUD_CDC 1
+#define CFG_TUD_MSC 1
+#define CFG_TUD_HID 0
+#define CFG_TUD_MIDI 0
+#define CFG_TUD_VENDOR 0
+
+#define CFG_TUD_CDC_NOTIFY 1 // Enable use of notification endpoint
+
+// CDC FIFO size of TX and RX
+#define CFG_TUD_CDC_RX_BUFSIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
+#define CFG_TUD_CDC_TX_BUFSIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
+
+// CDC Endpoint transfer buffer size, default to max bulk packet size (HS 512, FS 64). Larger is faster.
+// Larger RX_EPSIZE requires CFG_TUD_CDC_RX_NEED_ZLP = 1 and host ZLP support
+#define CFG_TUD_CDC_RX_EPSIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
+#define CFG_TUD_CDC_TX_EPSIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
+
+// MSC Buffer size of Device Mass storage
+#define CFG_TUD_MSC_EP_BUFSIZE 512
