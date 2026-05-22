@@ -15,3 +15,4 @@
 #define W4_PALETTE_SIZE 16
 
 #define W4_DISK_SIZE 1024
+#define W4_CART_SIZE 64 * 1024

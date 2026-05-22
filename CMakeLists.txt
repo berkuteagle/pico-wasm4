@@ -43,6 +43,7 @@ add_executable(pico-wasm4
     src/wasm4-framebuffer.c
     src/usb_descriptors.c
     src/usb_msc.c
+    src/driver_w25qxx_interface.c
 )
 
 target_compile_definitions(pico-wasm4 PRIVATE
@@ -66,8 +67,8 @@ pico_set_program_name(pico-wasm4 "pico-wasm4")
 pico_set_program_version(pico-wasm4 "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(pico-wasm4 FALSE)
-pico_enable_stdio_usb(pico-wasm4 TRUE)
+pico_enable_stdio_uart(pico-wasm4 TRUE)
+pico_enable_stdio_usb(pico-wasm4 FALSE)
 pico_enable_stdio_rtt(pico-wasm4 FALSE)
 
 # Add the standard library to the build
