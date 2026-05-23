@@ -43,7 +43,8 @@ add_executable(pico-wasm4
     src/wasm4-framebuffer.c
     src/usb_descriptors.c
     src/usb_msc.c
-    src/driver_w25qxx_interface.c
+    src/w25qxx_utils.c
+    src/fs_utils.c
 )
 
 target_compile_definitions(pico-wasm4 PRIVATE
@@ -68,7 +69,7 @@ pico_set_program_version(pico-wasm4 "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(pico-wasm4 TRUE)
-pico_enable_stdio_usb(pico-wasm4 FALSE)
+pico_enable_stdio_usb(pico-wasm4 TRUE)
 pico_enable_stdio_rtt(pico-wasm4 FALSE)
 
 # Add the standard library to the build
@@ -85,10 +86,11 @@ target_link_libraries(pico-wasm4
     tinyusb_device
     tinyusb_board
     tinyusb_additions
+    littlefs
 )
 
 # Add the standard include files to the build
-target_include_directories(pico-wasm4 PRIVATE
+target_include_directories(pico-wasm4 SYSTEM PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
@@ -98,3 +100,15 @@ target_include_directories(pico-wasm4 PRIVATE
 # )
 
 pico_add_extra_outputs(pico-wasm4)
+
+add_library(littlefs INTERFACE)
+target_sources(littlefs INTERFACE
+    lib/littlefs/lfs.c
+    lib/littlefs/lfs_util.c
+)
+target_include_directories(littlefs INTERFACE
+    lib/littlefs
+)
+target_compile_options(littlefs INTERFACE -Wno-unused-function -Wno-null-dereference)
+
+#TODO!!! add https://github.com/adafruit/tinyuf2/blob/master/src/ghostfat.c

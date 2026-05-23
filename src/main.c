@@ -9,21 +9,19 @@
 #include "pico/time.h"
 #include "hardware/timer.h"
 #include "pico/m3/env.h"
-#include "wasm/cart1.h"
 #include "wasm4.h"
 #include "wasm4-runtime.h"
 #include "wasm4-display.h"
-#include "pico/w25qxx.h"
-#include "pico/w25qxx/interface.h"
+#include "fs_utils.h"
 
 static uint8_t cart[W4_CART_SIZE] = {};
+static uint32_t cart_size = 0;
+
 static uint8_t framebuffer[W4_FB_SIZE] = {};
 static uint8_t palette[W4_PALETTE_SIZE] = {};
 static uint8_t gamepad = 0;
 
 static repeating_timer_t gamepad_timer;
-
-static w25qxx_handle_t gs_handle;
 
 volatile bool frame_ready = false;
 volatile bool gamepad_ready = false;
@@ -46,7 +44,7 @@ static void usb_device_init(void)
 void core1_entry()
 {
     w4_runtime_init();
-    w4_runtime_load_wasm(cart, cart1_wasm_len);
+    w4_runtime_load_wasm(cart, cart_size);
 
     absolute_time_t next_frame = get_absolute_time();
 
@@ -72,33 +70,8 @@ int main()
     w4_display_init();
     buttons_init();
 
-    /* link interface function */
-    DRIVER_W25QXX_LINK_INIT(&gs_handle, w25qxx_handle_t);
-    DRIVER_W25QXX_LINK_SPI_QSPI_INIT(&gs_handle, w25qxx_interface_spi_qspi_init);
-    DRIVER_W25QXX_LINK_SPI_QSPI_DEINIT(&gs_handle, w25qxx_interface_spi_qspi_deinit);
-    DRIVER_W25QXX_LINK_SPI_QSPI_WRITE_READ(&gs_handle, w25qxx_interface_spi_qspi_write_read);
-    DRIVER_W25QXX_LINK_DELAY_MS(&gs_handle, w25qxx_interface_delay_ms);
-    DRIVER_W25QXX_LINK_DELAY_US(&gs_handle, w25qxx_interface_delay_us);
-    DRIVER_W25QXX_LINK_DEBUG_PRINT(&gs_handle, w25qxx_interface_debug_print);
-
-    w25qxx_set_type(&gs_handle, W25Q128);
-    w25qxx_set_interface(&gs_handle, W25QXX_INTERFACE_SPI);
-    w25qxx_set_dual_quad_spi(&gs_handle, false);
-
-    w25qxx_init(&gs_handle);
-
-    uint8_t manufacturer;
-    uint8_t device_id;
-    uint8_t res;
-
-    res = w25qxx_get_manufacturer_device_id(&gs_handle, &manufacturer, &device_id);
-
-    printf("ChipID read res: %d\n", res);
-    printf("w25qxx: manufacturer is 0x%02X device id is 0x%02X.\n", manufacturer, device_id);
-
-    res = w25qxx_read(&gs_handle, 0, cart, W4_CART_SIZE);
-
-    printf("Cart read res: %d\n", res);
+    fs_init();
+    fs_read_file("/cart.wasm", cart, W4_CART_SIZE, &cart_size);
 
     multicore_launch_core1(core1_entry);
 
@@ -130,20 +103,23 @@ int main()
 void tud_mount_cb(void)
 {
     //   blink_interval_ms = BLINK_MOUNTED;
+    printf("Mounted!");
 }
 
 void tud_umount_cb(void)
 {
     //   blink_interval_ms = BLINK_NOT_MOUNTED;
+    printf("Unmounted!");
 }
 
 void tud_suspend_cb(bool remote_wakeup_en)
 {
-    (void)remote_wakeup_en;
     //   blink_interval_ms = BLINK_SUSPENDED;
+    printf("Suspend: %d!", remote_wakeup_en);
 }
 
 void tud_resume_cb(void)
 {
     //   blink_interval_ms = tud_mounted() ? BLINK_MOUNTED : BLINK_NOT_MOUNTED;
+    printf("Resume!");
 }

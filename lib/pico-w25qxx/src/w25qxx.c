@@ -101,7 +101,7 @@ static uint8_t a_w25qxx_spi_write_read(w25qxx_handle_t *handle, uint8_t *in_buf,
 static uint8_t a_w25qxx_qspi_write_read(w25qxx_handle_t *handle, uint8_t instruction, uint8_t instruction_line,
                                         uint32_t address, uint8_t address_line, uint8_t address_len,
                                         uint32_t alternate, uint8_t alternate_line, uint8_t alternate_len,
-                                        uint8_t dummy, uint8_t *in_buf, uint32_t in_len,
+                                        uint8_t dummy, const uint8_t *in_buf, uint32_t in_len,
                                         uint8_t *out_buf, uint32_t out_len, uint8_t data_line)
 {
     if (handle->spi_qspi_write_read(instruction, instruction_line, address, address_line, address_len, /* write read data */
@@ -7975,7 +7975,7 @@ static uint8_t a_w25qxx_erase_sector(w25qxx_handle_t *handle, uint32_t addr)
  *            - 1 page program failed
  * @note      none
  */
-static uint8_t a_w25qxx_page_program(w25qxx_handle_t *handle, uint32_t addr, uint8_t *data, uint16_t len)
+static uint8_t a_w25qxx_page_program(w25qxx_handle_t *handle, uint32_t addr, const uint8_t *data, uint16_t len)
 {
     uint8_t res;
     uint8_t status;
@@ -8297,7 +8297,7 @@ static uint8_t a_w25qxx_page_program(w25qxx_handle_t *handle, uint32_t addr, uin
  *            - 1 write failed
  * @note      none
  */
-static uint8_t a_w25qxx_write_no_check(w25qxx_handle_t *handle, uint32_t addr, uint8_t *data, uint32_t len)
+static uint8_t a_w25qxx_write_no_check(w25qxx_handle_t *handle, uint32_t addr, const uint8_t *data, uint32_t len)
 {
     uint8_t res;
     uint16_t page_remain;
@@ -8354,7 +8354,7 @@ static uint8_t a_w25qxx_write_no_check(w25qxx_handle_t *handle, uint32_t addr, u
  *            - 5 erase sector failed
  * @note      none
  */
-uint8_t w25qxx_write(w25qxx_handle_t *handle, uint32_t addr, uint8_t *data, uint32_t len)
+uint8_t w25qxx_write(w25qxx_handle_t *handle, uint32_t addr, const uint8_t *data, uint32_t len)
 {
     uint8_t res;
     uint32_t sec_pos;

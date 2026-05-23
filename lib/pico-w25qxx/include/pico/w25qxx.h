@@ -158,7 +158,7 @@ typedef struct w25qxx_handle_s
     uint8_t (*spi_qspi_write_read)(uint8_t instruction, uint8_t instruction_line,
                                    uint32_t address, uint8_t address_line, uint8_t address_len,
                                    uint32_t alternate, uint8_t alternate_line, uint8_t alternate_len,
-                                   uint8_t dummy, uint8_t *in_buf, uint32_t in_len,
+                                   uint8_t dummy, const uint8_t *in_buf, uint32_t in_len,
                                    uint8_t *out_buf, uint32_t out_len, uint8_t data_line); /**< point to a spi_qspi_write_read function address */
     void (*delay_ms)(uint32_t ms);                                                         /**< point to a delay_ms function address */
     void (*delay_us)(uint32_t us);                                                         /**< point to a delay_us function address */
@@ -394,7 +394,7 @@ uint8_t w25qxx_read(w25qxx_handle_t *handle, uint32_t addr, uint8_t *data, uint3
  *            - 5 erase sector failed
  * @note      none
  */
-uint8_t w25qxx_write(w25qxx_handle_t *handle, uint32_t addr, uint8_t *data, uint32_t len);
+uint8_t w25qxx_write(w25qxx_handle_t *handle, uint32_t addr, const uint8_t *data, uint32_t len);
 
 /**
  * @brief      read only in the spi interface
