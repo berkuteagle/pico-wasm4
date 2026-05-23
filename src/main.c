@@ -96,30 +96,3 @@ int main()
         tud_task();
     }
 }
-
-//--------------------------------------------------------------------+
-// Device callbacks
-//--------------------------------------------------------------------+
-void tud_mount_cb(void)
-{
-    //   blink_interval_ms = BLINK_MOUNTED;
-    printf("Mounted!");
-}
-
-void tud_umount_cb(void)
-{
-    //   blink_interval_ms = BLINK_NOT_MOUNTED;
-    printf("Unmounted!");
-}
-
-void tud_suspend_cb(bool remote_wakeup_en)
-{
-    //   blink_interval_ms = BLINK_SUSPENDED;
-    printf("Suspend: %d!", remote_wakeup_en);
-}
-
-void tud_resume_cb(void)
-{
-    //   blink_interval_ms = tud_mounted() ? BLINK_MOUNTED : BLINK_NOT_MOUNTED;
-    printf("Resume!");
-}

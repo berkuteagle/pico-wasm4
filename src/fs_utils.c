@@ -105,3 +105,8 @@ int fs_read_file(const char *path, uint8_t *buffer, uint32_t buffer_size, uint32
 
     return 0;
 }
+
+const struct lfs_config *fs_get_lfs_config()
+{
+    return &fs_external_config;
+}

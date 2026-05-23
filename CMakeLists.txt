@@ -45,6 +45,8 @@ add_executable(pico-wasm4
     src/usb_msc.c
     src/w25qxx_utils.c
     src/fs_utils.c
+    src/mimic_fat.c
+    src/unicode.c
 )
 
 target_compile_definitions(pico-wasm4 PRIVATE

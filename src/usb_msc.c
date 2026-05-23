@@ -1,203 +1,24 @@
 #include "bsp/board_api.h"
 #include "tusb.h"
-#include "fat16.h"
-#include "compile_date.h"
+
+#include "mimic_fat.h"
+#include "fs_utils.h"
 
 // whether host does safe-eject
 static bool ejected = false;
+static bool is_initialized = false;
 
-#define README_CONTENTS \
-    "This is tinyusb's MassStorage Class demo.\r\n\r\n\
-If you find any bugs or get any questions, feel free to file an\r\n\
-issue at github.com/hathach/tinyusb"
-
-static file_content_t info[] = {
-    {
-        .name = "CART   WASM",
-        .content = NULL,
-        .size = WASM_BYTE_COUNT,
-        .cluster_start = 2,
-        .cluster_end = WASM_SECTOR_COUNT + 2,
-    },
-};
-
-#define NUM_FILES (1)
-#define NUM_DIRENTRIES (2)
-#define NUM_SECTORS_IN_DATA_REGION (BPB_TOTAL_SECTORS - BPB_RESERVED_SECTORS - (BPB_NUMBER_OF_FATS * BPB_SECTORS_PER_FAT) - ROOT_DIR_SECTOR_COUNT)
-#define CLUSTER_COUNT (NUM_SECTORS_IN_DATA_REGION / BPB_SECTORS_PER_CLUSTER)
-
-#define FS_START_FAT0_SECTOR BPB_RESERVED_SECTORS
-#define FS_START_FAT1_SECTOR (FS_START_FAT0_SECTOR + BPB_SECTORS_PER_FAT)
-#define FS_START_ROOTDIR_SECTOR (FS_START_FAT1_SECTOR + BPB_SECTORS_PER_FAT)
-#define FS_START_CLUSTERS_SECTOR (FS_START_ROOTDIR_SECTOR + ROOT_DIR_SECTOR_COUNT)
-
-static boot_block_t boot_block = {
-    .jump_instruction = {0xeb, 0x3c, 0x90},
-    .oem_info = "PICO2 W4",
-    .sector_size = BPB_SECTOR_SIZE,
-    .sectors_per_cluster = BPB_SECTORS_PER_CLUSTER,
-    .reserved_sectors = BPB_RESERVED_SECTORS,
-    .fat_copies = BPB_NUMBER_OF_FATS,
-    .root_directory_entries = BPB_ROOT_DIR_ENTRIES,
-    .total_sectors_16 = (BPB_TOTAL_SECTORS > 0xFFFF) ? 0 : BPB_TOTAL_SECTORS,
-    .media_descriptor = BPB_MEDIA_DESCRIPTOR_BYTE,
-    .sectors_per_fat = BPB_SECTORS_PER_FAT,
-    .sectors_per_track = 1,
-    .heads = 1,
-    .total_sectors_32 = (BPB_TOTAL_SECTORS > 0xFFFF) ? BPB_TOTAL_SECTORS : 0,
-    .physical_drive_num = 0x80, // to match MediaDescriptor of 0xF8
-    .extended_boot_sig = 0x29,
-    .volume_serial_number = 0x00420042,
-    .volume_label = "PICO2 WASM4",
-    .filesystem_identifier = "FAT16   ",
-};
-
-static void padded_memcpy(char *dst, char const *src, int len)
-{
-    for (int i = 0; i < len; ++i)
-    {
-        if (*src)
-        {
-            *dst = *src++;
-        }
-        else
-        {
-            *dst = ' ';
-        }
-        dst++;
-    }
-}
-
-static void wasm_read_block(uint32_t block_no, uint8_t *data)
-{
-    memset(data, 0, BPB_SECTOR_SIZE);
-    uint32_t sectionRelativeSector = block_no;
-
-    if (block_no == 0)
-    {
-        // Request was for the Boot block
-        memcpy(data, &boot_block, sizeof(boot_block));
-        data[510] = 0x55; // Always at offsets 510/511, even when BPB_SECTOR_SIZE is larger
-        data[511] = 0xaa; // Always at offsets 510/511, even when BPB_SECTOR_SIZE is larger
-    }
-    else if (block_no < FS_START_ROOTDIR_SECTOR)
-    {
-        // Request was for a FAT table sector
-        sectionRelativeSector -= FS_START_FAT0_SECTOR;
-
-        // second FAT is same as the first... use sectionRelativeSector to write data
-        if (sectionRelativeSector >= BPB_SECTORS_PER_FAT)
-        {
-            sectionRelativeSector -= BPB_SECTORS_PER_FAT;
-        }
-
-        uint16_t *data16 = (uint16_t *)(void *)data;
-        uint32_t sectorFirstCluster = sectionRelativeSector * FAT_ENTRIES_PER_SECTOR;
-        uint32_t firstUnusedCluster = info[0].cluster_end + 1;
-
-        // OPTIMIZATION:
-        // Because all files are contiguous, the FAT CHAIN entries
-        // are all set to (cluster+1) to point to the next cluster.
-        // All clusters past the last used cluster of the last file
-        // are set to zero.
-        //
-        // EXCEPTIONS:
-        // 1. Clusters 0 and 1 require special handling
-        // 2. Final cluster of each file must be set to END_OF_CHAIN
-        //
-
-        // Set default FAT values first.
-        for (uint16_t i = 0; i < FAT_ENTRIES_PER_SECTOR; i++)
-        {
-            uint32_t cluster = i + sectorFirstCluster;
-            if (cluster >= firstUnusedCluster)
-            {
-                data16[i] = 0;
-            }
-            else
-            {
-                data16[i] = cluster + 1;
-            }
-        }
-
-        // Exception #1: clusters 0 and 1 need special handling
-        if (sectionRelativeSector == 0)
-        {
-            data[0] = BPB_MEDIA_DESCRIPTOR_BYTE;
-            data[1] = 0xff;
-            data16[1] = FAT_END_OF_CHAIN; // cluster 1 is reserved
-        }
-
-        // Exception #2: the final cluster of each file must be set to END_OF_CHAIN
-        for (uint32_t i = 0; i < NUM_FILES; i++)
-        {
-            uint32_t lastClusterOfFile = info[i].cluster_end;
-            if (lastClusterOfFile >= sectorFirstCluster)
-            {
-                uint32_t idx = lastClusterOfFile - sectorFirstCluster;
-                if (idx < FAT_ENTRIES_PER_SECTOR)
-                {
-                    // that last cluster of the file is in this sector
-                    data16[idx] = FAT_END_OF_CHAIN;
-                }
-            }
-        }
-    }
-    else if (block_no < FS_START_CLUSTERS_SECTOR)
-    {
-        // Request was for a (root) directory sector .. root because not supporting subdirectories (yet)
-        sectionRelativeSector -= FS_START_ROOTDIR_SECTOR;
-
-        dir_entry_t *d = (void *)data;                // pointer to next free dir_entry_t this sector
-        int remainingEntries = DIRENTRIES_PER_SECTOR; // remaining count of DirEntries this sector
-
-        uint32_t startingFileIndex;
-
-        if (sectionRelativeSector == 0)
-        {
-            // volume label is first directory entry
-            padded_memcpy(d->name, (char const *)boot_block.volume_label, 11);
-            d->attrs = 0x28;
-            d++;
-            remainingEntries--;
-
-            startingFileIndex = 0;
-        }
-        else
-        {
-            // -1 to account for volume label in first sector
-            startingFileIndex = DIRENTRIES_PER_SECTOR * sectionRelativeSector - 1;
-        }
-
-        for (uint32_t fileIndex = startingFileIndex;
-             remainingEntries > 0 && fileIndex < NUM_FILES; // while space remains in buffer and more files to add...
-             fileIndex++, d++)
-        {
-            // WARNING -- code presumes all files take exactly one directory entry (no long file names!)
-            uint32_t const startCluster = info[fileIndex].cluster_start;
-
-            file_content_t const *inf = &info[fileIndex];
-            padded_memcpy(d->name, inf->name, 11);
-
-            d->create_time_fine = COMPILE_SECONDS_INT % 2 * 100;
-            d->create_time = COMPILE_DOS_TIME;
-            d->create_date = COMPILE_DOS_DATE;
-            d->last_access_date = COMPILE_DOS_DATE;
-            d->high_start_cluster = startCluster >> 16;
-            d->update_time = COMPILE_DOS_TIME;
-            d->update_date = COMPILE_DOS_DATE;
-            d->start_cluster = startCluster & 0xFFFF;
-            d->size = (inf->content ? inf->size : WASM_BYTE_COUNT);
-        }
-    }
-}
+static const char msc_vid[8] = "Pico2 W4";
+static const char msc_pid[16] = "Mass Storage";
+static const char msc_rev[4] = "1.0";
 
 void tud_msc_inquiry_cb(uint8_t lun, uint8_t vendor_id[8], uint8_t product_id[16], uint8_t product_rev[4])
 {
     (void)lun;
-    (void)vendor_id;
-    (void)product_id;
-    (void)product_rev;
+
+    memcpy(vendor_id, msc_vid, 8);
+    memcpy(product_id, msc_pid, 16);
+    memcpy(product_rev, msc_rev, 4);
 }
 
 // Invoked when received SCSI_CMD_INQUIRY, v2 with full inquiry response
@@ -207,13 +28,10 @@ uint32_t tud_msc_inquiry2_cb(uint8_t lun, scsi_inquiry_resp_t *inquiry_resp, uin
 {
     (void)lun;
     (void)bufsize;
-    const char vid[] = "Pico2 W4";
-    const char pid[] = "Mass Storage";
-    const char rev[] = "1.0";
 
-    (void)strncpy((char *)inquiry_resp->vendor_id, vid, 8);
-    (void)strncpy((char *)inquiry_resp->product_id, pid, 16);
-    (void)strncpy((char *)inquiry_resp->product_rev, rev, 4);
+    (void)strncpy((char *)inquiry_resp->vendor_id, msc_vid, 8);
+    (void)strncpy((char *)inquiry_resp->product_id, msc_pid, 16);
+    (void)strncpy((char *)inquiry_resp->product_rev, msc_rev, 4);
 
     return sizeof(scsi_inquiry_resp_t); // 36 bytes
 }
@@ -239,8 +57,9 @@ bool tud_msc_test_unit_ready_cb(uint8_t lun)
 void tud_msc_capacity_cb(uint8_t lun, uint32_t *block_count, uint16_t *block_size)
 {
     (void)lun;
-    *block_count = WASM_SECTOR_COUNT + 2;
-    *block_size = BPB_SECTOR_SIZE;
+
+    *block_count = 4096;
+    *block_size = DISK_SECTOR_SIZE;
 }
 
 // Invoked when received Start Stop Unit command
@@ -271,46 +90,36 @@ bool tud_msc_start_stop_cb(uint8_t lun, uint8_t power_condition, bool start, boo
 // Copy disk's data to buffer (up to bufsize) and return number of copied bytes.
 int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize)
 {
-    (void)lun;
-    memset(buffer, 0, bufsize);
+    (void)offset;
 
-    // since we return block size each, offset should always be zero
-    if (offset != 0)
+    if (!is_initialized)
     {
-        return -1;
+        mimic_fat_init(fs_get_lfs_config());
+        mimic_fat_update_usb_device_is_enabled(true);
+        mimic_fat_create_cache();
+        is_initialized = true;
     }
+    mimic_fat_read(lun, lba, buffer, bufsize);
 
-    uint32_t count = 0;
-
-    while (count < bufsize)
-    {
-        wasm_read_block(lba, buffer);
-
-        lba++;
-        buffer += BPB_SECTOR_SIZE;
-        count += BPB_SECTOR_SIZE;
-    }
-
-    return count;
+    return (int32_t)bufsize;
 }
 
 bool tud_msc_is_writable_cb(uint8_t lun)
 {
     (void)lun;
-    return false;
+
+    return true;
 }
 
 // Callback invoked when received WRITE10 command.
 // Process data in buffer to disk's storage and return number of written bytes
 int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize)
 {
-    (void)lun;
-    (void)lba;
     (void)offset;
-    (void)buffer;
-    (void)bufsize;
 
-    return -1;
+    mimic_fat_write(lun, lba, buffer, bufsize);
+
+    return bufsize;
 }
 
 // Callback invoked when received an SCSI command not in built-in list below
@@ -318,15 +127,68 @@ int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t *
 // - READ10 and WRITE10 has their own callbacks
 int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cmd[16], void *buffer, uint16_t bufsize)
 {
-    (void)lun;
-    (void)scsi_cmd;
-    (void)buffer;
-    (void)bufsize;
+    void const *response = NULL;
+    int32_t resplen = 0;
 
-    // currently no other commands are supported
+    // most scsi handled is input
+    bool in_xfer = true;
 
-    // Set Sense = Invalid Command Operation
-    (void)tud_msc_set_sense(lun, SCSI_SENSE_ILLEGAL_REQUEST, 0x20, 0x00);
+    switch (scsi_cmd[0])
+    {
+    default:
+        // Set Sense = Invalid Command Operation
+        tud_msc_set_sense(lun, SCSI_SENSE_ILLEGAL_REQUEST, 0x20, 0x00);
+        // negative means error -> tinyusb could stall and/or response with failed status
+        resplen = -1;
+        break;
+    }
 
-    return -1; // stall/failed command request;
+    // return resplen must not larger than bufsize
+    if (resplen > bufsize)
+        resplen = bufsize;
+
+    if (response && (resplen > 0))
+    {
+        if (in_xfer)
+        {
+            memcpy(buffer, response, (size_t)resplen);
+        }
+        else
+        {
+            ; // SCSI output
+        }
+    }
+    return (int32_t)resplen;
+}
+
+void tud_mount_cb(void)
+{
+    printf("\e[45mmount\e[0m\n");
+    /*
+     * NOTE:
+     * This callback must be returned immediately. Time-consuming processing
+     * here will cause TinyUSB to PANIC `ep 0 in was already available`.
+     */
+    is_initialized = false;
+}
+
+void tud_umount_cb(void)
+{
+    //   blink_interval_ms = BLINK_NOT_MOUNTED;
+    printf("Unmounted!");
+}
+
+void tud_suspend_cb(bool remote_wakeup_en)
+{
+    (void)remote_wakeup_en;
+
+    printf("\e[45msuspend\e[0m\n");
+    mimic_fat_cleanup_cache();
+    mimic_fat_update_usb_device_is_enabled(false);
+}
+
+void tud_resume_cb(void)
+{
+    //   blink_interval_ms = tud_mounted() ? BLINK_MOUNTED : BLINK_NOT_MOUNTED;
+    printf("Resume!");
 }

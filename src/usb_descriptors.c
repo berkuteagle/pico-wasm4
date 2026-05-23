@@ -171,11 +171,11 @@ enum
 // array of pointer to string descriptors
 static char const *string_desc_arr[] = {
     (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
-    "TinyUSB",                  // 1: Manufacturer
-    "TinyUSB Device",           // 2: Product
+    "Pico WASM4",               // 1: Manufacturer
+    "Pico WASM4 Device",        // 2: Product
     NULL,                       // 3: Serials will use unique ID if possible
-    "TinyUSB CDC",              // 4: CDC Interface
-    "TinyUSB MSC",              // 5: MSC Interface
+    "Pico WASM4 CDC",           // 4: CDC Interface
+    "Pico WASM4 MSC",           // 5: MSC Interface
 };
 
 static uint16_t _desc_str[32 + 1];
