@@ -42,11 +42,8 @@ add_executable(pico-wasm4
     src/wasm4-display.c
     src/wasm4-framebuffer.c
     src/usb_descriptors.c
-    src/usb_msc.c
-    src/w25qxx_utils.c
+    src/w25qxx_device.c
     src/fs_utils.c
-    src/mimic_fat.c
-    src/unicode.c
 )
 
 target_compile_definitions(pico-wasm4 PRIVATE
@@ -112,5 +109,3 @@ target_include_directories(littlefs INTERFACE
     lib/littlefs
 )
 target_compile_options(littlefs INTERFACE -Wno-unused-function -Wno-null-dereference)
-
-#TODO!!! add https://github.com/adafruit/tinyuf2/blob/master/src/ghostfat.c

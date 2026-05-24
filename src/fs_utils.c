@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "fs_utils.h"
 #include "lfs.h"
-#include "w25qxx_utils.h"
+#include "fs_utils.h"
+#include "w25qxx_device.h"
 
 static int littlefs_read(const struct lfs_config *c, lfs_block_t block,
                          lfs_off_t offset, void *buffer, lfs_size_t size) {

@@ -9,7 +9,7 @@
 #include <pico/time.h>
 #include "pico/w25qxx.h"
 
-#include "w25qxx_utils.h"
+#include "w25qxx_device.h"
 
 static w25qxx_handle_t gs_handle;
 
