@@ -456,6 +456,20 @@ void w4_runtime_load_wasm(const uint8_t *const wasm_data, uint32_t wasm_data_siz
     res = m3_RunStart(module);
     res = m3_FindFunction(&update_fn, runtime, "update");
     res = m3_FindFunction(&start_fn, runtime, "start");
+
+    M3Function *func;
+    res = m3_FindFunction(&func, runtime, "_start");
+    if (func)
+    {
+        m3_CallV(func);
+        func = NULL;
+    }
+    res = m3_FindFunction(&func, runtime, "_initialize");
+    if (func)
+    {
+        m3_CallV(func);
+        func = NULL;
+    }
 }
 
 void w4_runtime_update(uint8_t *framebuffer, uint8_t *palette, uint8_t *gamepad)
