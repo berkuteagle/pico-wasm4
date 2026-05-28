@@ -1,7 +1,7 @@
 [submodule "lib/littlefs"]
 	path = lib/littlefs
 	url = https://github.com/littlefs-project/littlefs.git
-	branch = 6cb4e86540eca0d9ba62500a298385c9d863c8be
+	branch = v2
 [submodule "lib/wamr"]
 	path = lib/wamr
 	url = https://github.com/berkuteagle/wasm-micro-runtime.git
