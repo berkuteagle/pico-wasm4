@@ -5,3 +5,7 @@
 [submodule "lib/pico-wamr"]
 	path = lib/pico-wamr
 	url = https://github.com/berkuteagle/pico-wamr.git
+[submodule "lib/wamr"]
+	path = lib/wamr
+	url = https://github.com/berkuteagle/wasm-micro-runtime.git
+	branch = native_memory_import

@@ -51,11 +51,12 @@ target_compile_definitions(pico-wasm4 PRIVATE
     CONFIG_TINYUSB_MSC_ENABLED=y
 )
 
+include(pico_wamr.cmake)
+
 add_subdirectory(lib/pico-m3)
 add_subdirectory(lib/pico-st7789)
 add_subdirectory(lib/pico-buttons)
 add_subdirectory(lib/pico-w25qxx)
-add_subdirectory(lib/pico-wamr)
 
 target_compile_definitions(pico_m3 INTERFACE
     d_m3FixedHeap=204800
