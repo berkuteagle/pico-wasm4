@@ -42,8 +42,8 @@ _pwamr_default(WAMR_BUILD_LIBC_WASI        0)  # WASI libc (requires os_* filesy
 _pwamr_default(WAMR_BUILD_MINI_LOADER      1)  # smaller loader, drops debug info
 _pwamr_default(WAMR_BUILD_MULTI_MODULE     0)  # inter-module linking (needed for memory imports)
 _pwamr_default(WAMR_BUILD_REF_TYPES        0)  # reference types proposal
-# _pwamr_default(WAMR_BUILD_GLOBAL_HEAP_POOL 0)
-# _pwamr_default(WAMR_BUILD_GLOBAL_HEAP_SIZE 131072)
+_pwamr_default(WAMR_BUILD_GLOBAL_HEAP_POOL 0)
+_pwamr_default(WAMR_BUILD_GLOBAL_HEAP_SIZE 131072)
 
 # ── Features unavailable on bare-metal: forced off ────────────────────────────
 foreach(_f

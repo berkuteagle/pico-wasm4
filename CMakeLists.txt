@@ -36,15 +36,9 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(pico-wasm4
-    src/main.c
-    src/wasm4-runtime.c
-    src/wasm4-display.c
-    src/wasm4-framebuffer.c
-    src/usb_descriptors.c
-    src/w25qxx_device.c
-    src/fs_utils.c
-)
+file (GLOB_RECURSE SRC src/*.c)
+
+add_executable(pico-wasm4 ${SRC})
 
 target_compile_definitions(pico-wasm4 PRIVATE
     PICO_STACK_SIZE=0x1000
