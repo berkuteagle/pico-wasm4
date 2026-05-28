@@ -25,44 +25,27 @@ endif()
 message(STATUS "pico-wamr: Platform: ${PICO_PLATFORM}  WAMR target: ${_PWAMR_TARGET}")
 message(STATUS "pico-wamr: wamrc AOT:  wamrc ${_PWAMR_WAMRC} -o out.aot in.wasm")
 
-# ── User-configurable options ─────────────────────────────────────────────────
-# Each option can be set to 0/1 by the parent project before add_subdirectory.
-macro(_pwamr_default VAR DEFAULT)
-  if(NOT DEFINED ${VAR})
-    set(${VAR} ${DEFAULT})
-  endif()
-endmacro()
+set(WAMR_BUILD_TARGET       "${_PWAMR_TARGET}")
+set(WAMR_BUILD_INTERP       1)  # bytecode interpreter
+set(WAMR_BUILD_FAST_INTERP  1)  # threaded-dispatch (faster, +~8 KB flash)
+set(WAMR_BUILD_AOT          0)  # AOT blob loader; compile on host with wamrc
+set(WAMR_BUILD_LIBC_BUILTIN 0)  # WAMR built-in libc (memcpy, printf, ...)
+set(WAMR_BUILD_LIBC_WASI    0)  # WASI libc (requires os_* filesystem stubs)
+set(WAMR_BUILD_MINI_LOADER  1)  # smaller loader, drops debug info
+set(WAMR_BUILD_MULTI_MODULE 0)  # inter-module linking (needed for memory imports)
+set(WAMR_BUILD_REF_TYPES    0)  # reference types proposal
 
-_pwamr_default(WAMR_BUILD_TARGET           "${_PWAMR_TARGET}")
-_pwamr_default(WAMR_BUILD_INTERP           1)  # bytecode interpreter
-_pwamr_default(WAMR_BUILD_FAST_INTERP      1)  # threaded-dispatch (faster, +~8 KB flash)
-_pwamr_default(WAMR_BUILD_AOT              1)  # AOT blob loader; compile on host with wamrc
-_pwamr_default(WAMR_BUILD_LIBC_BUILTIN     0)  # WAMR built-in libc (memcpy, printf, ...)
-_pwamr_default(WAMR_BUILD_LIBC_WASI        0)  # WASI libc (requires os_* filesystem stubs)
-_pwamr_default(WAMR_BUILD_MINI_LOADER      1)  # smaller loader, drops debug info
-_pwamr_default(WAMR_BUILD_MULTI_MODULE     0)  # inter-module linking (needed for memory imports)
-_pwamr_default(WAMR_BUILD_REF_TYPES        0)  # reference types proposal
-_pwamr_default(WAMR_BUILD_GLOBAL_HEAP_POOL 0)
-_pwamr_default(WAMR_BUILD_GLOBAL_HEAP_SIZE 131072)
+set(WAMR_BUILD_GLOBAL_HEAP_POOL 0)
+set(WAMR_BUILD_GLOBAL_HEAP_SIZE 65536) # 131072
 
-# ── Features unavailable on bare-metal: forced off ────────────────────────────
-foreach(_f
-        WAMR_BUILD_JIT                   # Requires LLVM JIT infrastructure
-        WAMR_BUILD_FAST_JIT              # Requires LLVM
-        WAMR_BUILD_SIMD                  # No 128-bit SIMD on M0+/M33/Hazard3
-        WAMR_BUILD_SHARED_MEMORY         # Requires OS threading primitives
-        WAMR_BUILD_LIB_PTHREAD           # Requires pthreads
-        WAMR_BUILD_LIB_PTHREAD_SEMAPHORE)
-  if(${_f})
-    message(WARNING "pico-wamr: ${_f} is not supported on Pico bare-metal, forcing off")
-  endif()
-  set(${_f} 0)
-endforeach()
+set(WAMR_BUILD_JIT                   0)
+set(WAMR_BUILD_FAST_JIT              0)
+set(WAMR_BUILD_SIMD                  0)
+set(WAMR_BUILD_SHARED_MEMORY         0)
+set(WAMR_BUILD_LIB_PTHREAD           0)
+set(WAMR_BUILD_LIB_PTHREAD_SEMAPHORE 0)
+set(WAMR_DISABLE_HW_BOUND_CHECK      1)
 
-# Hardware bound check uses OS signal handlers — not available bare-metal
-set(WAMR_DISABLE_HW_BOUND_CHECK 1)
-
-# ── Wire up WAMR's build system ───────────────────────────────────────────────
 set(WAMR_BUILD_PLATFORM "pico")
 
 include("${WAMR_ROOT_DIR}/build-scripts/runtime_lib.cmake")
