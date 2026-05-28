@@ -41,8 +41,10 @@ static void usb_device_init(void) {
 
 void core1_entry() {
   vm_init();
-  w4_runtime_init();
-  w4_runtime_load_wasm(cart, cart_size);
+  // vm_load_module(ping_wasm, ping_wasm_len);
+
+  // w4_runtime_init();
+  // w4_runtime_load_wasm(cart, cart_size);
 
   absolute_time_t next_frame = get_absolute_time();
 
@@ -52,12 +54,14 @@ void core1_entry() {
 
     next_frame = delayed_by_us(next_frame, 16666);
 
-    w4_runtime_update(framebuffer, palette, &gamepad);
+    // w4_runtime_update(framebuffer, palette, &gamepad);
+    vm_update();
     frame_ready = true;
 
     sleep_until(next_frame);
   }
 
+  vm_unload_module();
   vm_destroy();
 }
 
@@ -85,7 +89,7 @@ int main() {
 
     if (frame_ready) {
       frame_ready = false;
-      w4_display_update((const uint8_t *)framebuffer, (const uint8_t *)palette);
+      // w4_display_update((const uint8_t *)framebuffer, (const uint8_t *)palette);
     }
 
     tud_task();

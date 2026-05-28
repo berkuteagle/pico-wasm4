@@ -14,3 +14,5 @@ char *vm_get_error(void);
 
 bool vm_load_module(uint8_t *data, size_t data_len);
 void vm_unload_module(void);
+
+void vm_update(void);
