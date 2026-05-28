@@ -52,6 +52,7 @@ target_compile_definitions(pico-wasm4 PRIVATE
 )
 
 include(pico_wamr.cmake)
+include(pico_littlefs.cmake)
 
 add_subdirectory(lib/pico-m3)
 add_subdirectory(lib/pico-st7789)
@@ -83,12 +84,12 @@ target_link_libraries(pico-wasm4
     pico_st7789
     pico_buttons
     pico_w25qxx
-    pico_wamr
     hardware_timer
     tinyusb_device
     tinyusb_board
     tinyusb_additions
-    littlefs
+    pico_wamr
+    pico_littlefs
 )
 
 # Add the standard include files to the build
@@ -102,13 +103,3 @@ target_include_directories(pico-wasm4 SYSTEM PRIVATE
 # )
 
 pico_add_extra_outputs(pico-wasm4)
-
-add_library(littlefs INTERFACE)
-target_sources(littlefs INTERFACE
-    lib/littlefs/lfs.c
-    lib/littlefs/lfs_util.c
-)
-target_include_directories(littlefs INTERFACE
-    lib/littlefs
-)
-target_compile_options(littlefs INTERFACE -Wno-unused-function -Wno-null-dereference)
