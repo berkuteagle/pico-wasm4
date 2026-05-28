@@ -41,7 +41,7 @@ static void usb_device_init(void) {
 
 void core1_entry() {
   vm_init();
-  // vm_load_module(ping_wasm, ping_wasm_len);
+  vm_load_module(cart, cart_size);
 
   // w4_runtime_init();
   // w4_runtime_load_wasm(cart, cart_size);
